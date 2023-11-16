@@ -1,5 +1,5 @@
 import hashlib
-import time
+from time import time
 
 
 
@@ -11,7 +11,7 @@ class Block():
         self.data_in = data_in
         self.nonce = nonce
         self.hash = hash
-        self.time = time.time()
+        self.time = time()
 
     
     def curr_block(self, index, data_in):
