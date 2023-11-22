@@ -1,6 +1,6 @@
 import hashlib
 from time import time
-
+from flask import Flask, requests
 
 
 class Block():
@@ -50,9 +50,5 @@ class Block():
         return hashed
 
 
+app = Flask(__name__)
 
-myblock = Block(2, 5, 1, 3)
-
-mined = myblock.mine(2)
-
-print(mined)

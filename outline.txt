@@ -1,0 +1,107 @@
+Class Blockchain
+
+INIT
+dev - initialize the chain (an empty list)
+dev - and pending transactions (empty list)
+-----
+
+method new_block
+dev - (self, nonce/proof, previous_hash=None)
+dev - will also init genisis block
+dev -  create a json like block with 
+dev - index timestamp content proof/nonce prev_hash
+dev - empty the pending transactions list
+dev - append the block to the chain
+-----
+
+method new_transaction
+dev - (self, sender, recipeint, amount(content))
+dev - append the args to pending transaction using dictionary
+dev - (sort of like JSON) 
+dev - add one to index
+
+-----
+
+
+method hash
+dev - hash(block)
+dev - if using json must "dump" to get the content by itself
+dev - should return hash of all the dumped json
+
+----
+
+
+method last_block
+
+
+-----
+
+
+
+method proof of work
+
+dev - (self, last_proof/nonce)
+dev - hash has to end with {difficulty} zeros
+dev - hash the prev proof/nonce with the current (constantly incrementing) proof/nonce
+dev - might be drop  quicker than hashing whole block
+dev - uses two functions for readability
+
+-------------------------------------------------------------
+
+API/Flask
+
+app = etc.
+
+dev - generate a unique addr for this node
+
+dev - instantiate the blockchain
+-----
+
+dev - make a mine route
+dev - do the proof-o-w
+dev - jsonify a new transaction from noone to mining node
+dev - giving them token etc.
+dev - create a block w this transaction as content
+dev - send response notifying tht block mined
+----
+
+dev - new transactions route POST
+dev - get the json, request.get_json()
+dev - check that required fields are in it
+dev - add to pending-transactions using method
+dev - respond with 10/4
+-----
+
+dev - chain route
+
+dev - func full chain
+dev - return json with the chain and it's length
+
+
+
+
+
+
+
+
+
+
+
+
+DON'T FORGET:
+call the main function
+app()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
