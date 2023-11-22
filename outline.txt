@@ -34,11 +34,16 @@ as - list pending-transactions, list chain, call method create-genesis_block
 gfg - just blockchain class
 gfg - init chain (empty list)
 gfg - calls create_block method, (for genesis) with proof=1 prev_hash=0
+##########
+one class, Blockchain.
+init
+empty list chain, empty list transactions, nodes, call create_block
 
 -----
 method create_genesis_block (as only)
 instantiate block class w 0 empty etc.
-
+#######
+rm -f
 -----
 
 method new_block
@@ -50,6 +55,10 @@ dev - empty the pending transactions list
 dev - append the block to the chain
 gfg - (self, proof/nonce, prev_hash)
 gfg - same as dev append
+#########
+(self, nonce, previous_hash) no need to set to None
+create JSON block with index, timestamp, content("transaction"), nonce, previous_hash
+append to chain
 -----
 
 method new_transaction
@@ -57,7 +66,11 @@ dev - (self, sender, recipeint, amount(content))
 dev - append the args to pending transaction using dictionary
 dev - (sort of like JSON) 
 dev - add one to index
-
+#########
+(self, sender, recipient, encrypted_msg)
+add one to index
+include everything a dict
+ 
 -----
 
 
@@ -66,6 +79,11 @@ dev - hash(block)
 dev - if using json must "dump" to get the content by itself
 dev - should return hash of all the dumped json
 as - in block class; same func as dev
+########
+hash(self, block)
+dump content
+hash content
+SHA256
 ----
 
 
@@ -75,11 +93,16 @@ dev - find the last block
 dev - chain[-1]
 as - same
 gfg - in fact without decorators
+#############
+No decorater
+return chain[-1]
 -----
 method registering nodes
 dev - (self, address)
 dev - parse the url
 dev - add to self.nodes (with parsed.netloc ??)
+#########
+all of the above
 -----
 
 method proof of work
@@ -92,6 +115,9 @@ dev - uses two functions for readability
 as - (self, block) in blockchain
 as - hashes the whole block using block.hash
 as - same general idea
+#############
+(self, last_nonce)
+hash prev nonce w current nonce
 ---------------------------------
 Consensus (inside class)
 
@@ -101,6 +127,8 @@ dev - loop through whole chain from last to first checking hashes w prev_hash
 dev - and proof with valid proof method (inside pow method)
 as - implemnts this for single blocks, as a method, before appending
 gfg - like dev
+#########
+loop through entire chain.
 -------
 method resolve conflicts
 dev - replace chain with the longest one on the network
@@ -108,7 +136,8 @@ dev - get a list of neighboring nodes
 dev - request chain from neighbors
 dev - check for 200 status code
 dev - if there's a longer chain replace ours (self.chain) with the longer one
-
+###########
+all of the above
 -------------------------------------------------------------
 
 API/Flask
