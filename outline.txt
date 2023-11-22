@@ -3,6 +3,7 @@ Class Blockchain
 INIT
 dev - initialize the chain (an empty list)
 dev - and pending transactions (empty list)
+dev - self.nodes set() so nodes only get added once
 -----
 
 method new_block
@@ -32,11 +33,15 @@ dev - should return hash of all the dumped json
 
 
 method last_block
-
+dev - find the last block
+dev - chain[-1]
 
 -----
-
-
+method registering nodes
+dev - (self, address)
+dev - parse the url
+dev - add to self.nodes (with parsed.netloc ??)
+-----
 
 method proof of work
 
@@ -45,6 +50,21 @@ dev - hash has to end with {difficulty} zeros
 dev - hash the prev proof/nonce with the current (constantly incrementing) proof/nonce
 dev - might be drop  quicker than hashing whole block
 dev - uses two functions for readability
+---------------------------------
+Consensus (inside class)
+
+method valid chain
+dev - (self, chain)
+dev - loop through whole chain from last to first checking hashes w prev_hash
+dev - and proof with valid proof method (inside pow method)
+
+-------
+method resolve conflicts
+dev - replace chain with the longest one on the network
+dev - get a list of neighboring nodes
+dev - request chain from neighbors
+dev - check for 200 status code
+dev - if there's a longer chain replace ours (self.chain) with the longer one
 
 -------------------------------------------------------------
 
@@ -57,7 +77,7 @@ dev - generate a unique addr for this node
 dev - instantiate the blockchain
 -----
 
-dev - make a mine route
+make a mine route
 dev - do the proof-o-w
 dev - jsonify a new transaction from noone to mining node
 dev - giving them token etc.
@@ -65,19 +85,28 @@ dev - create a block w this transaction as content
 dev - send response notifying tht block mined
 ----
 
-dev - new transactions route POST
+new transactions route POST
 dev - get the json, request.get_json()
 dev - check that required fields are in it
 dev - add to pending-transactions using method
 dev - respond with 10/4
 -----
 
-dev - chain route
+chain route
 
 dev - func full chain
 dev - return json with the chain and it's length
 
+-----
 
+/nodes/register route POST
+dev - just get list of nodes then method register
+dev - respond with message
+
+-----
+/nodes/resolve route
+dev - use resolve conflicts method
+dev - respond
 
 
 
