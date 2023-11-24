@@ -24,7 +24,7 @@ class Blockchain:
             "content": self.new_transactions,
         }
         block_json = json.dumps(block, sort_keys=True)
-        self.chain.append(block)
+        self.chain.append(block_json)
         # Clear new transactions list
         self.new_transactions = []
 
@@ -62,11 +62,13 @@ class Blockchain:
     def valid_chain(self, chain):
         """Loop through chain, check validity based on hashes and POW"""
         for i in range(len(chain) - 1, 0, -1):
-            if chain[i]["previous_hash"] != sha256(chain[i - 1]).hexdigest():
+            block = json.loads(chain[i])
+            previous_block = chain[i - 1]
+            if block["previous_hash"] != self.hash_block(previous_block):
                 return False
             elif (
-                self.hash_nonces(chain[i]["nonce"], chain[i - 1]["nonce"])[0:3]
-                != "0000"
+                self.hash_nonces(block["nonce"], json.loads(previous_block)["nonce"])[1]
+                != "0"
             ):
                 return False
             else:
@@ -92,6 +94,8 @@ class Blockchain:
 
 # blockchain.new_transaction("alice", "bob", "open-secret")
 
-# blockchain.new_block(60, "8a792b3269349f5ffa6d40e3c8a4232ff8282b117432de0eb95df5fb78e60818")
+# blockchain.new_block(blockchain.proof_of_work(json.loads(blockchain.last_block())["nonce"]), blockchain.hash_block(blockchain.last_block()))
 
-# print(blockchain.chain[1]["previous_hash"])
+# print(blockchain.valid_chain(blockchain.chain))
+
+# out = True
