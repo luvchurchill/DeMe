@@ -45,30 +45,35 @@ class Blockchain:
         """Finds the last block"""
         return self.chain[-1]
 
-    def hash_nonces(self, nonce, previous_nonce, timestamp):
-        """returns the hash of both nonces"""
-        sum = str(nonce + previous_nonce + timestamp)
+    def hash_nonces(self, nonce, previous_nonce, timestamp, previous_hash):
+        """returns the hash of all the data"""
+        sum = str(nonce + previous_nonce + timestamp) + previous_hash
         encoded = sum.encode()
         return sha256(encoded).hexdigest()
 
-    def proof_of_work(self, previous_nonce, timestamp):
-        """Requires the hash of both nonces to begin with 4 0's"""
+    def proof_of_work(self, previous_nonce, timestamp, previous_hash):
+        """Requires the hash of the data to begin with 4 0's"""
         nonce = 0
-        difficulty = 3
-        while self.hash_nonces(nonce, previous_nonce, timestamp)[1] != "0":
+        while self.hash_nonces(nonce, previous_nonce, timestamp, previous_hash)[0:4] != "0000":
             nonce += 1
         return nonce
 
     def valid_chain(self, chain):
-        """Loop through chain, check validity based on hashes and POW"""
+        """Loop through chain, check validity based on hashes and pow"""
+        # Loops from end to beginning
         for i in range(len(chain) - 1, 0, -1):
             block = json.loads(chain[i])
             previous_block = chain[i - 1]
             if block["previous_hash"] != self.hash_block(previous_block):
                 return False
             elif (
-                self.hash_nonces(block["nonce"], json.loads(previous_block)["nonce"], json.loads(previous_block)["timestamp"])[1]
-                != "0"
+                self.hash_nonces(
+                    block["nonce"],
+                    json.loads(previous_block)["nonce"],
+                    json.loads(previous_block)["timestamp"],
+                    self.hash_block(previous_block),
+                )[0:4]
+                != "0000"
             ):
                 return False
             else:
@@ -76,6 +81,7 @@ class Blockchain:
 
     def resolve_conflicts(self):
         """Replaces local chain with the longest chain on the network"""
+        # Will probably need to add a try/except block
         local_length = len(self.chain)
         if not self.nodes:
             return False
@@ -88,20 +94,6 @@ class Blockchain:
                     self.chain = json.loads(other_chain)
 
 
-# blockchain = Blockchain()
-
-# blockchain.new_transaction("me", "you", "hello")
-
-# blockchain.new_block(blockchain.proof_of_work(1), blockchain.hash_block(blockchain.last_block()))
-
-# blockchain.new_transaction("alice", "bob", "open-secret")
-
-# blockchain.new_block(blockchain.proof_of_work(json.loads(blockchain.last_block())["nonce"]), blockchain.hash_block(blockchain.last_block()))
-
-# print(blockchain.valid_chain(blockchain.chain))
-
-# out = True
-
 app = Flask(__name__)
 
 bc = Blockchain()
@@ -110,12 +102,12 @@ this_node = 1
 
 @app.route("/mine")
 def mining():
+    """Endpoint for mining new blocks"""
     bc.resolve_conflicts()
-    # This can be cleaned up
-    previous_nonce = json.loads(bc.last_block())["nonce"]
+    previous_data = json.loads(bc.last_block())
+    previous_nonce, previous_time = previous_data["nonce"], previous_data["timestamp"]
     previous_hash = bc.hash_block(bc.last_block())
-    previous_time = json.loads(bc.last_block())["timestamp"]
-    pow = bc.proof_of_work(previous_nonce, previous_time)
+    pow = bc.proof_of_work(previous_nonce, previous_time, previous_hash)
     bc.new_transaction(0, this_node, f"block mined by {this_node}")
     bc.new_block(pow, previous_hash)
     mined_block = bc.chain[-1]
@@ -124,29 +116,37 @@ def mining():
 
 @app.route("/valid")
 def validate():
-    is_it = bc.valid_chain(bc.chain)
-    return jsonify(is_it)
+    """Endpoint to validate the chain based on checks in Blockchain.valid_chain"""
+    validity = bc.valid_chain(bc.chain)
+    return jsonify(validity)
+
 
 @app.route("/chain")
 def get_chain():
+    """returns the full chain"""
     return jsonify(bc.chain)
 
-@app.route("/new", methods = ["POST"])
+
+@app.route("/new", methods=["POST"])
 def new_transaction():
+    """Packages new Tx into new block and appends to chain"""
     submitted = request.get_json()
     content = submitted["content"][0]
     bc.new_transaction(content["sender"], content["recipient"], content["message"])
-    previous_nonce = json.loads(bc.last_block())["nonce"]
-    previous_time = json.loads(bc.last_block())["timestamp"]
+    previous_data = json.loads(bc.last_block())
+    previous_nonce, previous_time = previous_data["nonce"], previous_data["timestamp"]
     previous_hash = bc.hash_block(bc.last_block())
-    pow = bc.proof_of_work(previous_nonce, previous_time)
+    pow = bc.proof_of_work(previous_nonce, previous_time, previous_hash)
     bc.new_block(pow, previous_hash)
     return jsonify(bc.chain[-1])
 
-
+@app.route("/register", methods = ["POST"])
+def register():
+    """Registers new nodes and returns list of known nodes"""
+    nodes = request.get_json()
+    for node in nodes:
+        bc.nodes.append(node)
+    return jsonify(bc.nodes)
 
 
 app.run("0.0.0.0", debug=True)
-
-    
-    
