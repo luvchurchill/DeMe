@@ -54,7 +54,10 @@ class Blockchain:
     def proof_of_work(self, previous_nonce, timestamp, previous_hash):
         """Requires the hash of the data to begin with 4 0's"""
         nonce = 0
-        while self.hash_nonces(nonce, previous_nonce, timestamp, previous_hash)[0:4] != "0000":
+        while (
+            self.hash_nonces(nonce, previous_nonce, timestamp, previous_hash)[0:4]
+            != "0000"
+        ):
             nonce += 1
         return nonce
 
@@ -140,7 +143,8 @@ def new_transaction():
     bc.new_block(pow, previous_hash)
     return jsonify(bc.chain[-1])
 
-@app.route("/register", methods = ["POST"])
+
+@app.route("/register", methods=["POST"])
 def register():
     """Registers new nodes and returns list of known nodes"""
     nodes = request.get_json()
