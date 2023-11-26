@@ -1,7 +1,7 @@
 import json
 from time import time
 from hashlib import sha256
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import requests
 
 
@@ -45,17 +45,17 @@ class Blockchain:
         """Finds the last block"""
         return self.chain[-1]
 
-    def hash_nonces(self, nonce, previous_nonce):
+    def hash_nonces(self, nonce, previous_nonce, timestamp):
         """returns the hash of both nonces"""
-        sum = str(nonce + previous_nonce)
-        noth = sum.encode()
-        return sha256(noth).hexdigest()
+        sum = str(nonce + previous_nonce + timestamp)
+        encoded = sum.encode()
+        return sha256(encoded).hexdigest()
 
-    def proof_of_work(self, previous_nonce):
+    def proof_of_work(self, previous_nonce, timestamp):
         """Requires the hash of both nonces to begin with 4 0's"""
         nonce = 0
         difficulty = 3
-        while self.hash_nonces(nonce, previous_nonce)[1] != "0":
+        while self.hash_nonces(nonce, previous_nonce, timestamp)[1] != "0":
             nonce += 1
         return nonce
 
@@ -67,7 +67,7 @@ class Blockchain:
             if block["previous_hash"] != self.hash_block(previous_block):
                 return False
             elif (
-                self.hash_nonces(block["nonce"], json.loads(previous_block)["nonce"])[1]
+                self.hash_nonces(block["nonce"], json.loads(previous_block)["nonce"], json.loads(previous_block)["timestamp"])[1]
                 != "0"
             ):
                 return False
@@ -77,6 +77,8 @@ class Blockchain:
     def resolve_conflicts(self):
         """Replaces local chain with the longest chain on the network"""
         local_length = len(self.chain)
+        if not self.nodes:
+            return False
         for node in self.nodes:
             response = requests.get(f"{node}/chain")
             if response.status_code == "200":
@@ -99,3 +101,47 @@ class Blockchain:
 # print(blockchain.valid_chain(blockchain.chain))
 
 # out = True
+
+app = Flask(__name__)
+
+bc = Blockchain()
+this_node = 1
+
+
+@app.route("/mine")
+def mining():
+    bc.resolve_conflicts()
+    previous_nonce = json.loads(bc.last_block())["nonce"]
+    previous_hash = bc.hash_block(bc.last_block())
+    previous_time = json.loads(bc.last_block())["timestamp"]
+    pow = bc.proof_of_work(previous_nonce, previous_time)
+    bc.new_transaction(0, this_node, f"block mined by {this_node}")
+    bc.new_block(pow, previous_hash)
+    mined_block = bc.chain[-1]
+    return jsonify(mined_block)
+
+
+@app.route("/valid")
+def validate():
+    is_it = bc.valid_chain(bc.chain)
+    return jsonify(is_it)
+
+@app.route("/chain")
+def get_chain():
+    return jsonify(bc.chain)
+
+@app.route("/new", methods = ["POST"])
+def new_transaction():
+    submitted = request.get_json()
+    bc.new_transaction(content["sender"], content["recipient"], content["message"])
+    return jsonify(bc.new_transactions)
+
+
+
+
+
+
+app.run("0.0.0.0", debug=True)
+
+    
+    
