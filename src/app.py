@@ -133,10 +133,9 @@ def get_chain():
 @app.route("/new", methods = ["POST"])
 def new_transaction():
     submitted = request.get_json()
-    bc.new_transaction(content["sender"], content["recipient"], content["message"])
+    content = submitted["content"][0]
+    bc.new_transaction(content["message"], content["recipient"], content["sender"])
     return jsonify(bc.new_transactions)
-
-
 
 
 
