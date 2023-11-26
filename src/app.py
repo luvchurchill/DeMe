@@ -111,6 +111,7 @@ this_node = 1
 @app.route("/mine")
 def mining():
     bc.resolve_conflicts()
+    # This can be cleaned up
     previous_nonce = json.loads(bc.last_block())["nonce"]
     previous_hash = bc.hash_block(bc.last_block())
     previous_time = json.loads(bc.last_block())["timestamp"]
@@ -134,8 +135,13 @@ def get_chain():
 def new_transaction():
     submitted = request.get_json()
     content = submitted["content"][0]
-    bc.new_transaction(content["message"], content["recipient"], content["sender"])
-    return jsonify(bc.new_transactions)
+    bc.new_transaction(content["sender"], content["recipient"], content["message"])
+    previous_nonce = json.loads(bc.last_block())["nonce"]
+    previous_time = json.loads(bc.last_block())["timestamp"]
+    previous_hash = bc.hash_block(bc.last_block())
+    pow = bc.proof_of_work(previous_nonce, previous_time)
+    bc.new_block(pow, previous_hash)
+    return jsonify(bc.chain[-1])
 
 
 
