@@ -1,3 +1,19 @@
+"""DeMe decenteralized messaging using Blockchain
+Copyright (C) 2023  https://github.com/luvchurchill
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>."""
+
 import json
 from time import time
 from hashlib import sha256
@@ -151,6 +167,11 @@ def register():
     for node in nodes:
         bc.nodes.append(node)
     return jsonify(bc.nodes)
+
+@app.route("/update")
+def update_chain():
+    """Updates local chain to the longest valid chain on the network"""
+    
 
 
 app.run("0.0.0.0", debug=True)
