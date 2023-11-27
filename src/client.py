@@ -14,12 +14,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>."""
 
+import json
 import requests
-import socket
 import sys
 import time
 
-#known_node = input("please input the IP of a know node e.g. '8.8.8.8' ")
+#known_node = input("please input the IP of a known node e.g. '8.8.8.8' ")
 def get_ip_address():
     url = 'https://api.ipify.org'
     try:
@@ -55,10 +55,18 @@ local_host = "127.0.0.1:5000"
 print(f"{local_host}/mine")
 
 def check_messages():
+    my_messages = []
     my_node = {"new_node": get_ip_address()}
-    requests.post(f"http://{local_host}/register", json=my_node)
-    print(my_node)
-    pass
+    #requests.post(f"http://{local_host}/register", json=my_node)
+    headers = {'Accept': 'application/json'}
+    request = requests.get(f"http://{local_host}/chain", headers=headers)
+    chain = json.loads(request.content)
+    for block in chain:
+        block_dict = json.loads(block)
+        if block_dict["content"] and block_dict["content"][0]["recipient"] == "me":
+            my_messages.append(block)
+
+    print(my_messages)
 
 
 def send_message():
