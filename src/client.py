@@ -19,9 +19,10 @@ import requests
 import sys
 import time
 
-#known_node = input("please input the IP of a known node e.g. '8.8.8.8' ")
+
+# known_node = input("please input the IP of a known node e.g. '8.8.8.8' ")
 def get_ip_address():
-    url = 'https://api.ipify.org'
+    url = "https://api.ipify.org"
     try:
         response = requests.get(url)
         ip = response.text
@@ -30,11 +31,15 @@ def get_ip_address():
         print(f"there was an error with resolving your ip {error}")
     except Exception as err:
         print(f"there was an error {err}")
- 
-print(get_ip_address())
+
+
+#print(get_ip_address())
+
 
 def main():
-    action = input("Check new messages: 'n', Send a message 's', Download the chain 'c', Quit 'q'")
+    action = input(
+        "Check new messages: 'n', Send a message 's', Download the chain 'c', Quit 'q'"
+    )
     if "q" in action:
         print("Exiting DeMe")
         time.sleep(1)
@@ -51,18 +56,23 @@ def main():
     else:
         print("Not a valid option, please try again")
 
+
 local_host = "127.0.0.1:5000"
-print(f"{local_host}/mine")
+
 
 def check_messages():
+    """Check for new messages"""
     my_messages = []
+    headers = {"Accept": "application/json"}
     my_node = {"new_node": get_ip_address()}
-    #requests.post(f"http://{local_host}/register", json=my_node)
-    headers = {'Accept': 'application/json'}
+    known_nodes = requests.post(
+        f"http://{local_host}/register", json=my_node, headers=headers
+    )
+    print(known_nodes.json())
     request = requests.get(f"http://{local_host}/chain", headers=headers)
     chain = json.loads(request.content)
     for block in chain:
-        block_dict = json.loads(block)
+        block_dict = block
         if block_dict["content"] and block_dict["content"][0]["recipient"] == "me":
             my_messages.append(block)
 
@@ -70,13 +80,21 @@ def check_messages():
 
 
 def send_message():
-    pass
+    sender_addr = input("Please input your public key: ")
+    recipient_addr = input("Please input the recipients public key: ")
+    message = input("Please input your message: ")
+    tx = {"sender": sender_addr, "recipient": recipient_addr, "message": message}
+    json_tx = json.dumps(tx, sort_keys=True)
+    request = requests.post(f"http://{local_host}/new", json=json_tx)
+    respone = request.json()
+    print(respone)
 
 
 def get_chain():
+    headers = {"Accept": "application/json"}
+    request = requests.get(f"http://{local_host}/chain", headers=headers)
+    print(request.json())
     pass
-
-
 
 
 while True:

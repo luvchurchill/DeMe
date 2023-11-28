@@ -39,8 +39,8 @@ class Blockchain:
             "previous_hash": previous_hash,
             "content": self.new_transactions,
         }
-        block_json = json.dumps(block, sort_keys=True)
-        self.chain.append(block_json)
+        #block_json = json.dumps(block, sort_keys=True)
+        self.chain.append(block)
         # Clear new transactions list
         self.new_transactions = []
 
@@ -81,15 +81,15 @@ class Blockchain:
         """Loop through chain, check validity based on hashes and pow"""
         # Loops from end to beginning
         for i in range(len(chain) - 1, 0, -1):
-            block = json.loads(chain[i])
+            block = chain[i]
             previous_block = chain[i - 1]
             if block["previous_hash"] != self.hash_block(previous_block):
                 return False
             elif (
                 self.hash_nonces(
                     block["nonce"],
-                    json.loads(previous_block)["nonce"],
-                    json.loads(previous_block)["timestamp"],
+                    previous_block["nonce"],
+                    previous_block["timestamp"],
                     self.hash_block(previous_block),
                 )[0:4]
                 != "0000"
@@ -105,7 +105,7 @@ class Blockchain:
         if not self.nodes:
             return False
         for node in self.nodes:
-            response = requests.get(f"{node}/chain")
+            response = requests.get(f"http://{node}/chain")
             if response.status_code == "200":
                 other_chain_length = response.json()["length"]
                 other_chain = response.json()["chain"]
@@ -122,8 +122,8 @@ this_node = 1
 @app.route("/mine")
 def mining():
     """Endpoint for mining new blocks"""
-    #bc.resolve_conflicts()
-    previous_data = json.loads(bc.last_block())
+    bc.resolve_conflicts()
+    previous_data = bc.last_block()
     previous_nonce, previous_time = previous_data["nonce"], previous_data["timestamp"]
     previous_hash = bc.hash_block(bc.last_block())
     pow = bc.proof_of_work(previous_nonce, previous_time, previous_hash)
@@ -150,9 +150,9 @@ def get_chain():
 def new_transaction():
     """Packages new Tx into new block and appends to chain"""
     submitted = request.get_json()
-    content = submitted["content"][0]
+    content = json.loads(submitted)
     bc.new_transaction(content["sender"], content["recipient"], content["message"])
-    previous_data = json.loads(bc.last_block())
+    previous_data = bc.last_block()
     previous_nonce, previous_time = previous_data["nonce"], previous_data["timestamp"]
     previous_hash = bc.hash_block(bc.last_block())
     pow = bc.proof_of_work(previous_nonce, previous_time, previous_hash)
@@ -164,14 +164,14 @@ def new_transaction():
 def register():
     """Registers new nodes and returns list of known nodes"""
     nodes = request.get_json()
-    for node in nodes:
-        bc.nodes.append(node)
-    return jsonify(bc.nodes)
+    new_node = nodes["new_node"]
+    bc.nodes.append(new_node)
+    return bc.nodes
+
 
 @app.route("/update")
 def update_chain():
     """Updates local chain to the longest valid chain on the network"""
-    
 
 
 app.run("0.0.0.0", debug=True)
