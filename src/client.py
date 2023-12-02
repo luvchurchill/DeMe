@@ -14,6 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>."""
 
+import base64
 from cryptography.fernet import Fernet
 import json
 import os
@@ -34,7 +35,6 @@ def get_ip_address():
         print(f"there was an error with resolving your ip {error}")
     except Exception as err:
         print(f"there was an error {err}")
-
 
 
 def main():
@@ -67,30 +67,44 @@ local_host = "127.0.0.1:5000"
 def check_messages():
     """Check for new messages"""
     my_messages = []
+    unencrypted_messages = []
     headers = {"Accept": "application/json"}
     my_node = {"new_node": get_ip_address()}
     known_nodes = requests.post(
         f"http://{local_host}/register", json=my_node, headers=headers
     )
-    #print(known_nodes.json()) for debugging
+    # print(known_nodes.json()) for debugging
     request = requests.get(f"http://{local_host}/chain", headers=headers)
     chain = json.loads(request.content)
+    my_public = load_keys("mine")[0].save_pkcs1("PEM").decode()
+    my_private = load_keys("mine")[1]
     for block in chain:
-        block_dict = block
-        if block_dict["content"] and block_dict["content"][0]["recipient"] == "me":
+        if block["content"] and block["content"][0]["recipient"] == my_public:
             my_messages.append(block)
+            key = base64.b64decode(block["content"][0]["key"])
+            decrypted_key = decrypt_rsa(key, my_private)
+            decrypted_message = fernet_decrypt(decrypted_key, block["content"][0]["message"])
+            unencrypted_messages.append(decrypted_message)
 
-    print(my_messages)
+    print(unencrypted_messages)
 
 
 def send_message():
     """Sends a new message"""
     encryption_managment()
-    sender_public = load_keys("mine")[0]
-    recipient_public = load_keys(input("Please input the file path of the recipients public key: "))
+    sender_public = load_keys("mine")[0].save_pkcs1("PEM").decode()
+    recipient_public = load_keys(
+        input("Please input the file path of the recipients public key: ")
+    )
     message, fernet_key = fernet_encrypt()
     encrypted_key = encrypt_rsa(fernet_key, recipient_public)
-    tx = {"sender": sender_public, "recipient": recipient_public, "message": message, "key": encrypted_key}
+    encoded_key = base64.b64encode(encrypted_key).decode()
+    tx = {
+        "sender": sender_public,
+        "recipient": recipient_public.save_pkcs1("PEM").decode(),
+        "message": message.decode(),
+        "key": encoded_key,
+    }
     json_tx = json.dumps(tx, sort_keys=True)
     request = requests.post(f"http://{local_host}/new", json=json_tx)
     respone = request.json()
@@ -113,16 +127,15 @@ def mine():
 
 def encryption_managment():
     has_keys = input("do you already have keys saved? ('y', 'n') ")
-    if has_keys == 'n':
+    if has_keys == "n":
         generate_keys()
-
 
 
 def generate_keys():
     try:
-            os.mkdir("keys")
+        os.mkdir("keys")
     except:
-            print("it seems you already have a 'keys' subdirectory ")
+        print("it seems you already have a 'keys' subdirectory ")
     public_key, private_key = rsa.newkeys(2048)
     with open("keys/public.pem", "wb") as p:
         p.write(public_key.save_pkcs1("PEM"))
@@ -145,17 +158,17 @@ def load_keys(file_path):
         return public_key
 
 
-
 def encrypt_rsa(plaintext, key):
-    return rsa.encrypt(plaintext.encode("ascii"), key)
+    return rsa.encrypt(plaintext, key)
 
 
 def decrypt_rsa(ciphertext, key):
     try:
-        return rsa.decrypt(ciphertext, key).decode("ascii")
+        return rsa.decrypt(ciphertext, key).decode()
     except:
         return False
-    
+
+
 def fernet_encrypt():
     fernet_key = Fernet.generate_key()
     message = input("Type the message you want to send: ")
@@ -163,12 +176,11 @@ def fernet_encrypt():
     encrypted = fernet.encrypt(message.encode())
     return encrypted, fernet_key
 
+
 def fernet_decrypt(key, message):
     fernet = Fernet(key)
     decrypted = fernet.decrypt(message)
     return decrypted.decode()
-
-
 
 
 while True:

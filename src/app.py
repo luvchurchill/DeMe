@@ -39,7 +39,7 @@ class Blockchain:
             "previous_hash": previous_hash,
             "content": self.new_transactions,
         }
-        #block_json = json.dumps(block, sort_keys=True)
+        # block_json = json.dumps(block, sort_keys=True)
         self.chain.append(block)
         # Clear new transactions list
         self.new_transactions = []
@@ -48,7 +48,12 @@ class Blockchain:
         """Structures the transaction data as a dictionary
         and appends to the new_transactions list"""
 
-        transaction = {"sender": sender, "recipient": recipient, "message": message, "key": key}
+        transaction = {
+            "sender": sender,
+            "recipient": recipient,
+            "message": message,
+            "key": key,
+        }
         self.new_transactions.append(transaction)
 
     def hash_block(self, block):
@@ -122,12 +127,12 @@ this_node = 1
 @app.route("/mine")
 def mining():
     """Endpoint for mining new blocks"""
-    #bc.resolve_conflicts()
+    # bc.resolve_conflicts()
     previous_data = bc.last_block()
     previous_nonce, previous_time = previous_data["nonce"], previous_data["timestamp"]
     previous_hash = bc.hash_block(bc.last_block())
     pow = bc.proof_of_work(previous_nonce, previous_time, previous_hash)
-    bc.new_transaction(0, this_node, f"block mined by {this_node}")
+    bc.new_transaction(0, this_node, f"block mined by {this_node}", None)
     bc.new_block(pow, previous_hash)
     mined_block = bc.chain[-1]
     return jsonify(mined_block)
@@ -151,7 +156,9 @@ def new_transaction():
     """Packages new Tx into new block and appends to chain"""
     submitted = request.get_json()
     content = json.loads(submitted)
-    bc.new_transaction(content["sender"], content["recipient"], content["message"], content["key"])
+    bc.new_transaction(
+        content["sender"], content["recipient"], content["message"], content["key"]
+    )
     previous_data = bc.last_block()
     previous_nonce, previous_time = previous_data["nonce"], previous_data["timestamp"]
     previous_hash = bc.hash_block(bc.last_block())
