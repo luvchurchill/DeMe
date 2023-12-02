@@ -39,7 +39,7 @@ def get_ip_address():
 
 def main():
     action = input(
-        "Check new messages: 'n', Send a message 's', Download the chain 'c', Mine a block 'm' Quit 'q': "
+        "Check new messages: 'n', Send a message 's', Download the chain 'c', Mine a block 'm',  Quit 'q': "
     )
     if "q" in action:
         print("Exiting DeMe")
@@ -67,7 +67,7 @@ local_host = "127.0.0.1:5000"
 def check_messages():
     """Check for new messages"""
     my_messages = []
-    unencrypted_messages = []
+    decrypted_messages = []
     headers = {"Accept": "application/json"}
     my_node = {"new_node": get_ip_address()}
     known_nodes = requests.post(
@@ -76,22 +76,27 @@ def check_messages():
     # print(known_nodes.json()) for debugging
     request = requests.get(f"http://{local_host}/chain", headers=headers)
     chain = json.loads(request.content)
+    # Load RSA keys from file
     my_public = load_keys("mine")[0].save_pkcs1("PEM").decode()
     my_private = load_keys("mine")[1]
     for block in chain:
+        # If recipient is my Public key
         if block["content"] and block["content"][0]["recipient"] == my_public:
             my_messages.append(block)
             key = base64.b64decode(block["content"][0]["key"])
             decrypted_key = decrypt_rsa(key, my_private)
-            decrypted_message = fernet_decrypt(decrypted_key, block["content"][0]["message"])
-            unencrypted_messages.append(decrypted_message)
+            decrypted_message = fernet_decrypt(
+                decrypted_key, block["content"][0]["message"]
+            )
+            decrypted_messages.append(decrypted_message)
 
-    print(unencrypted_messages)
+    print(decrypted_messages)
 
 
 def send_message():
     """Sends a new message"""
     encryption_managment()
+    # Load RSA keys from file
     sender_public = load_keys("mine")[0].save_pkcs1("PEM").decode()
     recipient_public = load_keys(
         input("Please input the file path of the recipients public key: ")
@@ -107,15 +112,15 @@ def send_message():
     }
     json_tx = json.dumps(tx, sort_keys=True)
     request = requests.post(f"http://{local_host}/new", json=json_tx)
-    respone = request.json()
-    print(respone)
+    response = request.json()
+    print(response)
 
 
 def get_chain():
     """Gets the entire chain"""
     headers = {"Accept": "application/json"}
     request = requests.get(f"http://{local_host}/chain", headers=headers)
-    print(request.json())
+    print(json.loads(request.content))
 
 
 def mine():
@@ -135,7 +140,9 @@ def generate_keys():
     try:
         os.mkdir("keys")
     except:
-        print("it seems you already have a 'keys' subdirectory ")
+        print(
+            "it seems you already have a 'keys' subdirectory, DeMe will overwrite your keys "
+        )
     public_key, private_key = rsa.newkeys(2048)
     with open("keys/public.pem", "wb") as p:
         p.write(public_key.save_pkcs1("PEM"))

@@ -30,7 +30,7 @@ class Blockchain:
 
     def new_block(self, nonce, previous_hash):
         """Structures all the relevant data into a block
-        and appends to the chain as a JSON"""
+        and appends to the chain"""
 
         block = {
             "index": len(self.chain) + 1,
@@ -39,7 +39,6 @@ class Blockchain:
             "previous_hash": previous_hash,
             "content": self.new_transactions,
         }
-        # block_json = json.dumps(block, sort_keys=True)
         self.chain.append(block)
         # Clear new transactions list
         self.new_transactions = []
@@ -58,7 +57,7 @@ class Blockchain:
 
     def hash_block(self, block):
         """Hashes the contents of the block"""
-
+        # I think this can be mostly discarded
         block_content = json.dumps(block, sort_keys=True).encode()
         return sha256(block_content).hexdigest()
 
@@ -105,17 +104,24 @@ class Blockchain:
 
     def resolve_conflicts(self):
         """Replaces local chain with the longest chain on the network"""
-        # Will probably need to add a try/except block
         local_length = len(self.chain)
+        headers = {"Accept": "application/json"}
         if not self.nodes:
             return False
         for node in self.nodes:
-            response = requests.get(f"http://{node}/chain")
+            try:
+                response = requests.get(f"http://{node}/chain", headers=headers)
+            except:
+                pass
             if response.status_code == "200":
-                other_chain_length = response.json()["length"]
-                other_chain = response.json()["chain"]
+                chain = json.loads(response.content)
+                other_chain_length = 0
+                for block in chain:
+                    other_chain_length += 1
                 if int(other_chain_length) > local_length:
-                    self.chain = json.loads(other_chain)
+                    self.chain = []
+                    for block in chain:
+                        self.chain.append(block)
 
 
 app = Flask(__name__)
@@ -127,7 +133,7 @@ this_node = 1
 @app.route("/mine")
 def mining():
     """Endpoint for mining new blocks"""
-    # bc.resolve_conflicts()
+    bc.resolve_conflicts()
     previous_data = bc.last_block()
     previous_nonce, previous_time = previous_data["nonce"], previous_data["timestamp"]
     previous_hash = bc.hash_block(bc.last_block())
@@ -178,6 +184,7 @@ def register():
 
 @app.route("/update")
 def update_chain():
+    bc.resolve_conflicts()
     """Updates local chain to the longest valid chain on the network"""
 
 
