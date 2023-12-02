@@ -122,7 +122,7 @@ this_node = 1
 @app.route("/mine")
 def mining():
     """Endpoint for mining new blocks"""
-    bc.resolve_conflicts()
+    #bc.resolve_conflicts()
     previous_data = bc.last_block()
     previous_nonce, previous_time = previous_data["nonce"], previous_data["timestamp"]
     previous_hash = bc.hash_block(bc.last_block())
