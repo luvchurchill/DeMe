@@ -44,11 +44,11 @@ class Blockchain:
         # Clear new transactions list
         self.new_transactions = []
 
-    def new_transaction(self, sender, recipient, message):
+    def new_transaction(self, sender, recipient, message, key):
         """Structures the transaction data as a dictionary
         and appends to the new_transactions list"""
 
-        transaction = {"sender": sender, "recipient": recipient, "message": message}
+        transaction = {"sender": sender, "recipient": recipient, "message": message, "key": key}
         self.new_transactions.append(transaction)
 
     def hash_block(self, block):
@@ -151,7 +151,7 @@ def new_transaction():
     """Packages new Tx into new block and appends to chain"""
     submitted = request.get_json()
     content = json.loads(submitted)
-    bc.new_transaction(content["sender"], content["recipient"], content["message"])
+    bc.new_transaction(content["sender"], content["recipient"], content["message"], content["key"])
     previous_data = bc.last_block()
     previous_nonce, previous_time = previous_data["nonce"], previous_data["timestamp"]
     previous_hash = bc.hash_block(bc.last_block())
