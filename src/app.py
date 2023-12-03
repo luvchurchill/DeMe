@@ -57,7 +57,8 @@ class Blockchain:
 
     def hash_block(self, block):
         """Hashes the contents of the block"""
-        # I think this can be mostly discarded
+        # Can't think of another way to hash a block
+        # Dicts cannot be encoded
         block_content = json.dumps(block, sort_keys=True).encode()
         return sha256(block_content).hexdigest()
 
@@ -106,6 +107,7 @@ class Blockchain:
         """Replaces local chain with the longest chain on the network"""
         local_length = len(self.chain)
         headers = {"Accept": "application/json"}
+        response = False
         if not self.nodes:
             return False
         for node in self.nodes:
@@ -113,7 +115,7 @@ class Blockchain:
                 response = requests.get(f"http://{node}/chain", headers=headers)
             except:
                 pass
-            if response.status_code == "200":
+            if response and response.status_code == "200":
                 chain = json.loads(response.content)
                 other_chain_length = 0
                 for block in chain:
@@ -177,9 +179,9 @@ def new_transaction():
 def register():
     """Registers new nodes and returns list of known nodes"""
     nodes = request.get_json()
-    new_node = nodes["new_node"]
-    bc.nodes.append(new_node)
-    return bc.nodes
+    for node in nodes:
+        bc.nodes.append(node)
+    return jsonify(bc.nodes)
 
 
 @app.route("/update")
