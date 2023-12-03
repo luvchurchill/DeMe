@@ -184,9 +184,24 @@ def register():
     return jsonify(bc.nodes)
 
 
-@app.route("/update")
-def update_chain():
-    bc.resolve_conflicts()
+@app.route("/newblock", methods=["POST"])
+def new_outside_block():
+    submitted = request.get_json()
+    test = Blockchain()
+    test.chain = bc.chain
+    test.chain.append(submitted)
+    print(type(submitted))
+    if test.valid_chain(test.chain) == True:
+        bc.chain.append(submitted)
+    else:
+        return jsonify("invalid block")
+    # for node in bc.nodes:
+    #     try:
+    #         post = requests.post("https://example.com")
+    #     except:
+    #         pass
+    # return jsonify(submitted)
+
     """Updates local chain to the longest valid chain on the network"""
 
 
