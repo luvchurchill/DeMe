@@ -187,14 +187,13 @@ def register():
 @app.route("/newblock", methods=["POST"])
 def new_outside_block():
     submitted = request.get_json()
-    test = Blockchain()
-    test.chain = bc.chain
-    test.chain.append(submitted)
+    bc.chain.append(submitted)
     print(type(submitted))
-    if test.valid_chain(test.chain) == True:
-        bc.chain.append(submitted)
-    else:
+    if not bc.valid_chain(bc.chain):
+        bc.chain.pop()
         return jsonify("invalid block")
+    else:
+        return jsonify(submitted)
     # for node in bc.nodes:
     #     try:
     #         post = requests.post("https://example.com")
