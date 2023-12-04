@@ -200,8 +200,3 @@ def new_outside_block():
     #     except:
     #         pass
     # return jsonify(submitted)
-
-    """Updates local chain to the longest valid chain on the network"""
-
-
-app.run("0.0.0.0", debug=True)
