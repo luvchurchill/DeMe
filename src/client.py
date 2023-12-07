@@ -24,7 +24,6 @@ import sys
 import time
 
 
-# known_node = input("please input the IP of a known node e.g. '8.8.8.8' ")
 def get_ip_address():
     url = "https://api.ipify.org"
     try:
@@ -43,7 +42,7 @@ def main():
     )
     if "q" in action:
         print("Exiting DeMe")
-        time.sleep(1)
+        time.sleep(0.5)
         exit(0)
     elif "n" in action:
         check_messages()

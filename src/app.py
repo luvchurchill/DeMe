@@ -159,10 +159,6 @@ def validate():
 def get_chain():
     """returns the full chain"""
     bc.resolve_conflicts()
-    headers = {"Accept": "application/json"}
-    response = requests.get(f"{server}/chain", headers=headers)
-    new_chain = json.loads(response.content)
-    bc.chain = new_chain
     return jsonify(bc.chain)
 
 
@@ -207,3 +203,5 @@ def new_outside_block():
     #     except:
     #         pass
     # return jsonify(submitted)
+
+app.run("0.0.0.0", debug=True)
