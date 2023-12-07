@@ -32,7 +32,7 @@ def get_ip_address():
         ip = response.text
         return ip
     except requests.HTTPError as error:
-        print(f"there was an error with resolving your ip {error}")
+        print(f"there was an error resolving your ip {error}")
     except Exception as err:
         print(f"there was an error {err}")
 
@@ -62,6 +62,7 @@ def main():
 
 
 local_host = "127.0.0.1:5000"
+server = "https://flask-hello-world-luvchurchills-projects.vercel.app"
 
 
 def check_messages():
@@ -73,7 +74,7 @@ def check_messages():
     known_nodes = requests.post(
         f"http://{local_host}/register", json=my_node, headers=headers
     )
-    request = requests.get(f"http://{local_host}/chain", headers=headers)
+    request = requests.get(f"{server}/chain", headers=headers)
     chain = json.loads(request.content)
     # Load RSA keys from file
     my_public = load_keys("mine")[0].save_pkcs1("PEM").decode()
@@ -112,7 +113,8 @@ def send_message():
     json_tx = json.dumps(tx, sort_keys=True)
     request = requests.post(f"http://{local_host}/new", json=json_tx)
     response = request.json()
-    print(response)
+    to_server = requests.post(f"{server}/newblock", json=response)
+    print(response, to_server)
 
 
 def get_chain():
@@ -126,7 +128,8 @@ def mine():
     """Mines a new block"""
     headers = {"Accept": "application/json"}
     request = requests.get(f"http://{local_host}/mine", headers=headers)
-    print(request.json())
+    to_server = requests.post(f"{server}/newblock", json=request.json())
+    print(request.json(), to_server.json())
 
 
 def encryption_managment():

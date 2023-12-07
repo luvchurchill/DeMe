@@ -107,15 +107,15 @@ class Blockchain:
         """Replaces local chain with the longest chain on the network"""
         local_length = len(self.chain)
         headers = {"Accept": "application/json"}
-        response = False
         if not self.nodes:
             return False
         for node in self.nodes:
+            response = False
             try:
-                response = requests.get(f"http://{node}/chain", headers=headers)
+                response = requests.get(f"{node}/chain", headers=headers)
             except:
                 pass
-            if response and response.status_code == "200":
+            if response and response.status_code == 200:
                 chain = json.loads(response.content)
                 other_chain_length = 0
                 for block in chain:
@@ -130,6 +130,8 @@ app = Flask(__name__)
 
 bc = Blockchain()
 this_node = 1
+server = "https://flask-hello-world-luvchurchills-projects.vercel.app"
+bc.nodes.append(server)
 
 
 @app.route("/mine")
@@ -156,12 +158,18 @@ def validate():
 @app.route("/chain")
 def get_chain():
     """returns the full chain"""
+    bc.resolve_conflicts()
+    headers = {"Accept": "application/json"}
+    response = requests.get(f"{server}/chain", headers=headers)
+    new_chain = json.loads(response.content)
+    bc.chain = new_chain
     return jsonify(bc.chain)
 
 
 @app.route("/new", methods=["POST"])
 def new_transaction():
     """Packages new Tx into new block and appends to chain"""
+    bc.resolve_conflicts()
     submitted = request.get_json()
     content = json.loads(submitted)
     bc.new_transaction(
@@ -188,7 +196,6 @@ def register():
 def new_outside_block():
     submitted = request.get_json()
     bc.chain.append(submitted)
-    print(type(submitted))
     if not bc.valid_chain(bc.chain):
         bc.chain.pop()
         return jsonify("invalid block")
