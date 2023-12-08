@@ -92,6 +92,16 @@ the rest is pretty self-explantory but here's a couple things to keep in mind.
 3) when program asks you if you already have keys, if you do yet you answer no, it will overwrite your old keys and you will have to share your public key again with your correspondents
 
 ----------------
+### Conssesions
+
+Mining has no purpose meanwhile because I'm still trying to figure out UTXO, but eventually I want it to be an anti spam mechanism.
+
+the nodes mostly communicate with a server and not each other. This is because in order to communicate to each other, users would have to set up port forwarding which has some security issues and can be complicated. I wanted this to work right away and be simple to use.
+
+If you want to use this with a private network of friends I left in the infrastructure that's needed, just substitute `server` for a known node (and a couple little obvious changes) and it should work
+
+
+---------------
 
 #### Credits
 
@@ -101,5 +111,7 @@ I got the outline for the skeleton of a blockchain from 3 articles
  You can look at outline.txt to see what I incorporated from each
 
  [python.land](python.land), [python docs](https://docs.python.org/), [geeks for geeks](https://www.geeksforgeeks.org/) and many more
+
+ [vercel](https://vercel.com/) for providing free hosting for hobbyists etc., it's very easy to use, I highly recommend.
 
  Last but not least [Prof. David Malan](https://davidmalan.com/malan/)!
