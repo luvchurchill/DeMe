@@ -73,7 +73,7 @@ def check_messages():
     known_nodes = requests.post(
         f"http://{local_host}/register", json=my_node, headers=headers
     )
-    request = requests.get(f"{server}/chain", headers=headers)
+    request = requests.get(f"http://{local_host}/chain", headers=headers)
     chain = json.loads(request.content)
     # Load RSA keys from file
     my_public = load_keys("mine")[0].save_pkcs1("PEM").decode()
